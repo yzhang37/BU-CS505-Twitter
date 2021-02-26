@@ -1,6 +1,6 @@
 from config import auth
 from twython import Twython
-import json
+import ujson as json
 import os
 import time
 
@@ -49,7 +49,7 @@ def continuous_save_twitter():
         count = len(raw_texts)
         print(f"Outputting {count} texts...")
         with open(raw_json_file, 'w') as fout:
-            json.dump(raw_texts, fout, indent=2, ensure_ascii=False)
+            json.dump(raw_texts, fout, ensure_ascii=False)
         time.sleep(2)
 
 

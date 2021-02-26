@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class MyAuth:
@@ -33,3 +34,6 @@ class MyAuth:
 
 
 auth = MyAuth()
+CURDIR = os.path.curdir
+PATH_STEP1_RAW = os.path.abspath(os.path.join(CURDIR, "raw_tweets.json"))
+PATH_STEP2_CLEAN = os.path.abspath(os.path.join(CURDIR, "clean_tweets.json"))
