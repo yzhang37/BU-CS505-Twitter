@@ -4,6 +4,7 @@ import json
 import os
 import time
 
+
 twitter = Twython(
     app_key=auth.api_key, app_secret=auth.api_secret,
     oauth_token=auth.access_token, oauth_token_secret=auth.access_token_secret
@@ -19,21 +20,15 @@ def fetch_twitter(count=10):
         tweet_mode="extended",
         count=str(count)
     )
-
-    def extract_text(status):
-        if "retweeted_status" in status.keys():
-            return status["retweeted_status"]["full_text"]
-        else:
-            return status["full_text"]
-
-    result_texts = list(map(extract_text, results["statuses"]))
+    result_texts = results["statuses"]
     return result_texts
 
 
-def save_raw_twitter():
-    raw_texts = fetch_twitter(10000)
-    with open('raw_tweets.json', 'w') as output:
-        json.dump(raw_texts, output, indent=2, ensure_ascii=False)
+def extract_text(status):
+    if "retweeted_status" in status.keys():
+        return status["retweeted_status"]["full_text"]
+    else:
+        return status["full_text"]
 
 
 def continuous_save_twitter():
@@ -55,7 +50,7 @@ def continuous_save_twitter():
         print(f"Outputting {count} texts...")
         with open(raw_json_file, 'w') as fout:
             json.dump(raw_texts, fout, indent=2, ensure_ascii=False)
-        time.sleep(10)
+        time.sleep(2)
 
 
 if __name__ == "__main__":
