@@ -1,11 +1,8 @@
 from config import PATH_STEP1_RAW, PATH_STEP2_CLEAN
 from nltk.tokenize import sent_tokenize, TweetTokenizer
-from nltk.lm.preprocessing import pad_both_ends, padded_everygram_pipeline
-from nltk.lm.models import KneserNeyInterpolated
-from nltk.util import everygrams
-
-twTknzr = TweetTokenizer()
+from nltk.lm.preprocessing import pad_both_ends
 import ujson as json
+twTknzr = TweetTokenizer()
 
 
 # 1. 用来提取文本的函数
@@ -27,7 +24,7 @@ def my_pad_both_ends(sentence):
 
 
 def word_tokenize_sentpad(sentsList):
-    return list(map(my_pad_both_ends, map(twTknzr.tokenize, sentsList)))
+    return list(map(my_pad_both_ends, map(twTknzr.tokenize, map(str.lower, sentsList))))
 
 
 def process():

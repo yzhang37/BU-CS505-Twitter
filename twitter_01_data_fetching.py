@@ -1,4 +1,4 @@
-from config import auth
+from config import auth, PATH_STEP1_RAW
 from twython import Twython
 import ujson as json
 import os
@@ -32,7 +32,7 @@ def extract_text(status):
 
 
 def continuous_save_twitter():
-    raw_json_file = 'raw_tweets.json'
+    raw_json_file = PATH_STEP1_RAW
     raw_json_file = os.path.abspath(os.path.join('.', raw_json_file))
 
     raw_texts = []
