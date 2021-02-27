@@ -1,66 +1,42 @@
-from config import PATH_STEP2_CLEAN
-import ujson as json
-from nltk.lm.models import KneserNeyInterpolated
-from nltk.util import everygrams
-from nltk.lm.preprocessing import padded_everygram_pipeline
 import numpy as np
-import pickle
+from nltk.lm.models import KneserNeyInterpolated
+from tqdm import tqdm
 
-
-def compress(corpora):
-    flatten = []
-    for sentences in corpora:
-        new_sentence = []
-        for sentence in sentences:
-            new_sentence.extend(sentence)
-        flatten.append(new_sentence)
-    return flatten
-
-
-def save_model(data, path):
-    with open(path, "wb") as f:
-        pickle.dump(data, f)
+from config import PATH_STEP2_CLEAN
+from models import init_models, compress, padded_multiple_models, fit_multiple_models, MyKFold
+from utilities import load_json, Ngrams
 
 
 def process():
-    with open(PATH_STEP2_CLEAN, "r") as f:
-        data = json.load(f)
-    # BUGBUG: this can also be modified to use Cross Validation
-    train_tweets = data[:9000]
-    test_tweets = data[9000:10000]
+    # 1. First load the data into memory
+    data = load_json(PATH_STEP2_CLEAN)
 
-    model1 = KneserNeyInterpolated(1)
-    model2 = KneserNeyInterpolated(2)
-    model3 = KneserNeyInterpolated(3)
+    # 2. Making 10-Fold Cross Validation
+    kFold = MyKFold(10, False)
+    print("Starting 10-Fold CV training/test")
+    means = np.zeros((10, 3))
+    for idx, (train_tweets, test_tweets) in enumerate(kFold(data)):
+        print(f"Fold {idx}:")
+        models = init_models(3, KneserNeyInterpolated)
+        train_sents = compress(train_tweets)
+        test_sents = compress(test_tweets)
 
-    train_sents = compress(train_tweets)
-    test_sents = compress(test_tweets)
+        # padded multiple models, returning a list of (ngram, vocab)
+        ngrams = padded_multiple_models(3, train_sents)
 
-    train_unigram, unigram_vocab = padded_everygram_pipeline(1, train_sents)
-    train_bigram, bigram_vocab = padded_everygram_pipeline(2, train_sents)
-    train_trigram, trigram_vocab = padded_everygram_pipeline(3, train_sents)
+        # train models using ngrams
+        fit_multiple_models(models, ngrams)
 
-    model1.fit(train_unigram, unigram_vocab)
-    print("Saving model1...")
-    save_model(model1, "model1.pickle")
-    model2.fit(train_bigram, bigram_vocab)
-    print("Saving model2...")
-    save_model(model2, "model2.pickle")
-    model3.fit(train_trigram, trigram_vocab)
-    print("Saving model3...")
-    save_model(model3, "model3.pickle")
+        test_ngrams = padded_multiple_models(3, test_sents)
+        for n in range(0, 3):
+            temp = [(models[n]).perplexity(i)
+                    for i in tqdm((test_ngrams[n])[0], desc=f"perplexity of {Ngrams(n)}", total=len(test_sents))]
+            means[idx, n] = np.mean(temp)
+        print(f"run {idx}, unigram: {means[idx, 0]}, bigram: {means[idx, 1]}, trigram: {means[idx, 2]}")
 
-    test_unigram, _ = padded_everygram_pipeline(1, test_sents)
-    test_bigram, _ = padded_everygram_pipeline(2, test_sents)
-    test_trigram, _ = padded_everygram_pipeline(3, test_sents)
-
-    uni_mean = np.mean([model1.perplexity(i) for i in test_unigram])
-    bi_mean = np.mean([model2.perplexity(i) for i in test_bigram])
-    tri_mean = np.mean([model3.perplexity(i) for i in test_trigram])
-
-    print(uni_mean)
-    print(bi_mean)
-    print(tri_mean)
+    final_means = np.mean(means, axis=0)
+    print("Final mean of 10-Fold CV:")
+    print(f"unigram: {final_means[0]}, bigram: {final_means[1]}, trigram: {final_means[2]}")
 
 
 if __name__ == "__main__":

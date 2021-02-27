@@ -1,7 +1,9 @@
-from config import PATH_STEP1_RAW, PATH_STEP2_CLEAN
-from nltk.tokenize import sent_tokenize, TweetTokenizer
 from nltk.lm.preprocessing import pad_both_ends
-import ujson as json
+from nltk.tokenize import sent_tokenize, TweetTokenizer
+
+from config import PATH_STEP1_RAW, PATH_STEP2_CLEAN
+from utilities import load_json, save_json
+
 twTknzr = TweetTokenizer()
 
 
@@ -28,15 +30,11 @@ def word_tokenize_sentpad(sentsList):
 
 
 def process():
-    with open(PATH_STEP1_RAW, "r") as fRaw:
-        data = json.load(fRaw)
-
+    data = load_json(PATH_STEP1_RAW)
     data = list(map(extract_text, data))
     data = list(map(sentence_segment, data))
     data = list(map(word_tokenize_sentpad, data))
-
-    with open(PATH_STEP2_CLEAN, "w") as fClean:
-        json.dump(data, fClean, ensure_ascii=False)
+    save_json(data, PATH_STEP2_CLEAN, ensure_ascii=False)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
-nltk
-numpy
-twython
+nltk~=3.5
+numpy~=1.19.2
+twython~=3.8.2
+tqdm~=4.50.2
+sklearn~=0.0
+scikit-learn~=0.23.2
+ujson~=4.0.1
